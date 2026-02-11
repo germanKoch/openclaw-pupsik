@@ -1,0 +1,15 @@
+{
+  "servers": {
+    "ticktick": {
+      "source": "https://github.com/jacepark12/ticktick-mcp",
+      "install_path": "/opt/mcp-servers/ticktick-mcp",
+      "transport": "stdio",
+      "command": "/opt/mcp-servers/ticktick-mcp/.venv/bin/python",
+      "args": ["-m", "ticktick_mcp.cli", "run"],
+      "env_vars": ["TICKTICK_ACCESS_TOKEN", "TICKTICK_CLIENT_ID", "TICKTICK_CLIENT_SECRET"],
+      "description": "TickTick task management via MCP",
+      "managed_by": "mcporter",
+      "mcporter_scope": "home"
+    }
+  }
+}

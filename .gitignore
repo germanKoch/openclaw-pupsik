@@ -1,0 +1,16 @@
+# Secrets & credentials
+.env
+.env.*
+!.env.template
+*.secret
+tokens/
+oauth-tokens/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
