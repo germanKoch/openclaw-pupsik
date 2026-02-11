@@ -6,7 +6,7 @@
       "transport": "stdio",
       "command": "/opt/mcp-servers/ticktick-mcp/.venv/bin/python",
       "args": ["-m", "ticktick_mcp.cli", "run"],
-      "env_vars": ["TICKTICK_ACCESS_TOKEN", "TICKTICK_CLIENT_ID", "TICKTICK_CLIENT_SECRET"],
+      "env_vars": ["TICKTICK_ACCESS_TOKEN", "TICKTICK_CLIENT_ID", "TICKTICK_CLIENT_SECRET", "TICKTICK_TIMEZONE"],
       "description": "TickTick task management via MCP",
       "managed_by": "mcporter",
       "mcporter_scope": "home"
