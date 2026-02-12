@@ -37,13 +37,18 @@
   - `CLAUDE.md` (updated)
 
 ### Phase 4: Testing & Verification
-- **Status:** in_progress
+- **Status:** complete
 - Actions taken:
   - Проверен bash-синтаксис нового скрипта.
   - Проверена валидность JSON для `mcp-servers.json`.
-  - Зафиксировано ограничение: полноценный smoke-test требует доступа к удаленному SSH-хосту.
+  - Выполнен удаленный деплой `./scripts/setup-google-calendar-mcp.sh` на `hetzner-main`.
+  - Подтверждено, что `mcporter` зарегистрировал `google-calendar` с `GOOGLE_OAUTH_CREDENTIALS=/opt/mcp-servers/google-calendar-mcp/gcp-oauth.keys.json`.
+  - Подтверждено, что credential-файл существует на сервере и читается.
+  - Auth-check показал отсутствие токена и необходимость первого OAuth login.
 - Files created/modified:
   - `progress.md` (updated)
+  - `.env` (updated)
+  - `scripts/setup-google-calendar-mcp.sh` (updated)
 
 ## Test Results
 | Test | Input | Expected | Actual | Status |
@@ -51,6 +56,12 @@
 | Session catchup check | `python3 .../session-catchup.py "$(pwd)"` | Report or no-op | No output (no catchup state) | ✓ |
 | Script syntax | `bash -n scripts/setup-google-calendar-mcp.sh` | No syntax errors | `bash syntax: ok` | ✓ |
 | Config JSON validation | `jq . mcp-servers.json` | Valid JSON | `json: ok` | ✓ |
+| Remote deploy | `./scripts/setup-google-calendar-mcp.sh` | google-calendar added + gateway restart | Success, service restarted | ✓ |
+| Remote mcporter env | `ssh hetzner-main \"mcporter config get google-calendar\"` | GOOGLE_OAUTH_CREDENTIALS present | Present with server path | ✓ |
+| Remote credential file | `ssh hetzner-main \"ls -l /opt/.../gcp-oauth.keys.json\"` | File exists and readable | Exists, mode `600` | ✓ |
+| OAuth token presence | `ssh hetzner-main \"... npx ... auth\"` | Existing token or interactive auth prompt | No token file, interactive OAuth required | ✓ |
+| Post-auth status | `ssh hetzner-main \"... npx ... auth\"` | Auth success after login | `Loaded tokens for normal account` | ✓ |
+| Primary calendar API | Remote Python check (`/calendars/primary`) | API access to primary calendar | `primary_calendar_api=ok` | ✓ |
 
 ## Error Log
 | Timestamp | Error | Attempt | Resolution |

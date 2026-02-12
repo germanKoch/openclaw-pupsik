@@ -6,17 +6,53 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
-SSH_HOST="${1:-${HETZNER_SSH_HOST:-hetzner-main}}"
+SSH_HOST_ARG="${1:-}"
 INSTALL_DIR="/opt/mcp-servers/google-calendar-mcp"
 CREDENTIALS_FILE="$INSTALL_DIR/gcp-oauth.keys.json"
 
-# Load local .env
-if [ -f "$REPO_DIR/.env" ]; then
-  # shellcheck source=/dev/null
-  source "$REPO_DIR/.env"
-else
+# Read local .env (dotenv style, without sourcing)
+if [ ! -f "$REPO_DIR/.env" ]; then
   echo "Error: $REPO_DIR/.env not found. Copy .env.template to .env and fill in credentials."
   exit 1
+fi
+
+read_env_var() {
+  local key="$1"
+  awk -v k="$key" '
+    /^[[:space:]]*#/ { next }
+    /^[[:space:]]*$/ { next }
+    {
+      line=$0
+      sub(/^[[:space:]]+/, "", line)
+      if (index(line, k "=") == 1) {
+        val = substr(line, length(k) + 2)
+        sub(/\r$/, "", val)
+        print val
+        exit
+      }
+    }
+  ' "$REPO_DIR/.env"
+}
+
+strip_quotes() {
+  local v="$1"
+  case "$v" in
+    \"*\") printf '%s' "${v:1:${#v}-2}" ;;
+    \'*\') printf '%s' "${v:1:${#v}-2}" ;;
+    *) printf '%s' "$v" ;;
+  esac
+}
+
+GOOGLE_OAUTH_CREDENTIALS_FILE="$(strip_quotes "$(read_env_var GOOGLE_OAUTH_CREDENTIALS_FILE)")"
+GOOGLE_CALENDAR_ENABLED_TOOLS="$(strip_quotes "$(read_env_var GOOGLE_CALENDAR_ENABLED_TOOLS)")"
+HETZNER_SSH_HOST="$(strip_quotes "$(read_env_var HETZNER_SSH_HOST)")"
+
+if [ -n "$SSH_HOST_ARG" ]; then
+  SSH_HOST="$SSH_HOST_ARG"
+elif [ -n "$HETZNER_SSH_HOST" ]; then
+  SSH_HOST="$HETZNER_SSH_HOST"
+else
+  SSH_HOST="hetzner-main"
 fi
 
 if [ -z "${GOOGLE_OAUTH_CREDENTIALS_FILE:-}" ]; then

@@ -28,15 +28,15 @@ Phase 5
 
 ### Phase 4: Testing & Verification
 - [x] Validate config syntax and script behavior
-- [ ] Smoke-test setup flow locally
+- [x] Smoke-test setup flow locally
 - [x] Document test results in progress.md
-- **Status:** in_progress
+- **Status:** complete
 
 ### Phase 5: Delivery
 - [x] Summarize changes and usage steps
 - [x] Note any manual actions needed in Google Cloud Console
-- [ ] Deliver final instructions to user
-- **Status:** in_progress
+- [x] Deliver final instructions to user
+- **Status:** complete
 
 ## Key Questions
 1. Which MCP server package for Google Calendar is best aligned with this repo style?
@@ -50,6 +50,7 @@ Phase 5
 | Use `@cocal/google-calendar-mcp` via `npx` | Official package from `nspady/google-calendar-mcp`, no dedicated server clone/build required |
 | Keep TickTick setup untouched and add a new script | Avoid regressions and preserve current deployment workflow |
 | Use `GOOGLE_OAUTH_CREDENTIALS_FILE` in local `.env` | Simple and safer than embedding JSON directly in env text |
+| Parse `.env` as dotenv instead of `source` in Google setup script | Avoids failures from special chars in unrelated secrets |
 
 ## Errors Encountered
 | Error | Attempt | Resolution |
