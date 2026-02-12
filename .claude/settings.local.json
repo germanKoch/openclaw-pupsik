@@ -3,7 +3,11 @@
     "allow": [
       "Bash(ssh:*)",
       "WebSearch",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(git -C /Users/germankochnev/Desktop/projects/utils/openclawd log --oneline --all)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }

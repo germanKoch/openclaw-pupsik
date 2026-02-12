@@ -1,5 +1,16 @@
 {
   "servers": {
+    "google-calendar": {
+      "source": "https://github.com/nspady/google-calendar-mcp",
+      "install_path": "/opt/mcp-servers/google-calendar-mcp",
+      "transport": "stdio",
+      "command": "npx",
+      "args": ["-y", "@cocal/google-calendar-mcp"],
+      "env_vars": ["GOOGLE_OAUTH_CREDENTIALS", "ENABLED_TOOLS"],
+      "description": "Google Calendar integration via MCP",
+      "managed_by": "mcporter",
+      "mcporter_scope": "home"
+    },
     "ticktick": {
       "source": "https://github.com/jacepark12/ticktick-mcp",
       "install_path": "/opt/mcp-servers/ticktick-mcp",
