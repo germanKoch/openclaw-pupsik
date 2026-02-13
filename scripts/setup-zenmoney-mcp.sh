@@ -8,8 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 SSH_HOST="${1:-hetzner-main}"
 INSTALL_DIR="/opt/mcp-servers/zenmoney-mcp"
-LOCAL_ZENMONEY_DIR="$HOME/Desktop/projects/utils/mcp/zenmoney-mcp"
-TOKEN_FILE="$LOCAL_ZENMONEY_DIR/.token.json"
+TOKEN_FILE="$REPO_DIR/.token.json"
 
 # Verify token file exists
 if [ ! -f "$TOKEN_FILE" ]; then
