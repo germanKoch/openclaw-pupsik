@@ -21,6 +21,18 @@
       "description": "TickTick task management via MCP",
       "managed_by": "mcporter",
       "mcporter_scope": "home"
+    },
+    "zenmoney": {
+      "source": "https://github.com/germanKoch/zenmoney-mcp",
+      "install_path": "/opt/mcp-servers/zenmoney-mcp",
+      "transport": "stdio",
+      "command": "/opt/mcp-servers/zenmoney-mcp/.venv/bin/python",
+      "args": ["main.py"],
+      "env_vars": [],
+      "token_file": ".token.json",
+      "description": "ZenMoney finance tracking via MCP",
+      "managed_by": "mcporter",
+      "mcporter_scope": "home"
     }
   }
 }

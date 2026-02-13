@@ -28,4 +28,5 @@ Deploy an MCP server to remote:
 ```
 ./scripts/setup-ticktick-mcp.sh [ssh-host]
 ./scripts/setup-google-calendar-mcp.sh [ssh-host]
+./scripts/setup-zenmoney-mcp.sh [ssh-host]
 ```
