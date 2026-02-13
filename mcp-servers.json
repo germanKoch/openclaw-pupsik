@@ -27,7 +27,7 @@
       "install_path": "/opt/mcp-servers/zenmoney-mcp",
       "transport": "stdio",
       "command": "/opt/mcp-servers/zenmoney-mcp/.venv/bin/python",
-      "args": ["main.py"],
+      "args": ["/opt/mcp-servers/zenmoney-mcp/main.py"],
       "env_vars": [],
       "token_file": ".token.json",
       "description": "ZenMoney finance tracking via MCP",

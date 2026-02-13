@@ -63,7 +63,7 @@ scp "$TOKEN_FILE" "$SSH_HOST:$INSTALL_DIR/.token.json"
 echo "Registering with mcporter..."
 ssh "$SSH_HOST" "mcporter config add zenmoney \
   --command '$INSTALL_DIR/.venv/bin/python' \
-  --arg 'main.py' \
+  --arg '$INSTALL_DIR/main.py' \
   --scope home \
   --description 'ZenMoney finance tracking via MCP' 2>/dev/null || echo 'Already registered'"
 
