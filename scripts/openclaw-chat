@@ -1,0 +1,432 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#   "websockets>=13",
+#   "cryptography>=42",
+# ]
+# ///
+"""CLI client for the personal openclaw AI assistant gateway.
+
+Connects to the openclaw gateway WebSocket API and shares the same session
+as the Telegram bot — so context established in Telegram is visible here,
+and vice versa.
+
+The SSH tunnel to the remote gateway is started automatically if the port
+is not already reachable. No manual tunnel management needed.
+
+Usage:
+  openclaw-chat "What's on my calendar today?"   # single-shot
+  openclaw-chat                                   # interactive REPL
+  openclaw-chat --health                          # connectivity check
+
+Configuration (from env or ~/.openclaw/.env):
+  OPENCLAW_GATEWAY_TOKEN   — gateway auth token (required)
+  OPENCLAW_SSH_HOST        — SSH host alias for the gateway server (default: hetzner-main)
+  OPENCLAW_GATEWAY_PORT    — gateway port (default: 18789)
+  OPENCLAW_SESSION_KEY     — conversation session to use (default: home)
+  OPENCLAW_TIMEOUT         — response timeout in seconds (default: 60)
+
+Requirements:
+  pip install websockets cryptography
+  or: uv pip install websockets cryptography
+"""
+
+from __future__ import annotations
+
+import argparse
+import asyncio
+import base64
+import hashlib
+import json
+import os
+import socket
+import subprocess
+import sys
+import time
+import uuid
+from pathlib import Path
+
+try:
+    import websockets
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+except ImportError:
+    print(
+        "Missing dependencies. Install them with:\n"
+        "  pip install websockets cryptography\n"
+        "or:\n"
+        "  uv pip install websockets cryptography",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
+
+# ---------------------------------------------------------------------------
+# Config
+# ---------------------------------------------------------------------------
+
+DEVICE_FILE = Path.home() / ".openclaw" / "device.json"
+
+
+def _load_env() -> None:
+    """Load ~/.openclaw/.env if it exists, falling back to current dir .env."""
+    for candidate in [Path.home() / ".openclaw" / ".env", Path(".env")]:
+        if candidate.exists():
+            for line in candidate.read_text().splitlines():
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, _, val = line.partition("=")
+                    os.environ.setdefault(key.strip(), val.strip())
+            return
+
+
+_load_env()
+
+GATEWAY_TOKEN = os.environ.get("OPENCLAW_GATEWAY_TOKEN", "")
+GATEWAY_PORT = int(os.environ.get("OPENCLAW_GATEWAY_PORT", "18789"))
+GATEWAY_URL = f"ws://localhost:{GATEWAY_PORT}?token={GATEWAY_TOKEN}"
+SESSION_KEY = os.environ.get("OPENCLAW_SESSION_KEY", "home")
+TIMEOUT = int(os.environ.get("OPENCLAW_TIMEOUT", "60"))
+SSH_HOST = os.environ.get("OPENCLAW_SSH_HOST") or os.environ.get("HETZNER_SSH_HOST", "hetzner-main")
+
+
+# ---------------------------------------------------------------------------
+# SSH tunnel — auto-start if needed
+# ---------------------------------------------------------------------------
+
+
+def _port_reachable(port: int, host: str = "localhost") -> bool:
+    try:
+        with socket.create_connection((host, port), timeout=1):
+            return True
+    except OSError:
+        return False
+
+
+def _ensure_tunnel() -> None:
+    """Start an SSH tunnel if the gateway port is not already reachable locally.
+
+    Uses `ssh -fNL` which backgrounds the process and keeps the tunnel alive
+    until the SSH session is terminated or the machine reboots. Subsequent
+    calls to openclaw-chat reuse the existing tunnel transparently.
+    """
+    if _port_reachable(GATEWAY_PORT):
+        return  # tunnel already up (or gateway running locally)
+
+    if not SSH_HOST:
+        print(
+            f"Error: port {GATEWAY_PORT} not reachable and OPENCLAW_SSH_HOST is not set.\n"
+            "Set OPENCLAW_SSH_HOST in ~/.openclaw/.env (e.g. OPENCLAW_SSH_HOST=hetzner-main).",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    print(f"Connecting to {SSH_HOST}...", file=sys.stderr, flush=True)
+    result = subprocess.run(
+        ["ssh", "-fNL", f"{GATEWAY_PORT}:localhost:{GATEWAY_PORT}", SSH_HOST],
+        timeout=15,
+    )
+    if result.returncode != 0:
+        print(
+            f"Error: SSH tunnel to {SSH_HOST} failed (exit code {result.returncode}).\n"
+            "Check that SSH access to the host works: ssh " + SSH_HOST,
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    # Wait for the tunnel to become ready (up to 5 seconds)
+    for _ in range(10):
+        time.sleep(0.5)
+        if _port_reachable(GATEWAY_PORT):
+            return
+
+    print(
+        f"Error: SSH tunnel started but port {GATEWAY_PORT} still not reachable.\n"
+        "Make sure the openclaw gateway is running on the remote host.",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
+
+# ---------------------------------------------------------------------------
+# Device identity (Ed25519 keypair, persisted across sessions)
+# ---------------------------------------------------------------------------
+
+
+def _b64url(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
+
+
+def _load_or_create_device() -> tuple[Ed25519PrivateKey, str, str]:
+    """Return (private_key, public_key_b64url, device_id), persisting to disk."""
+    DEVICE_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+    if DEVICE_FILE.exists():
+        data = json.loads(DEVICE_FILE.read_text())
+        priv_raw = base64.urlsafe_b64decode(data["private_key"] + "==")
+        private_key = Ed25519PrivateKey.from_private_bytes(priv_raw)
+        return private_key, data["public_key"], data["device_id"]
+
+    private_key = Ed25519PrivateKey.generate()
+    pub_raw = private_key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
+    priv_raw = private_key.private_bytes_raw()
+    pub_b64 = _b64url(pub_raw)
+    device_id = hashlib.sha256(pub_raw).hexdigest()
+
+    DEVICE_FILE.write_text(json.dumps({
+        "private_key": _b64url(priv_raw),
+        "public_key": pub_b64,
+        "device_id": device_id,
+    }))
+    return private_key, pub_b64, device_id
+
+
+def _sign_connect_payload(
+    private_key: Ed25519PrivateKey,
+    *,
+    device_id: str,
+    token: str,
+    nonce: str,
+    scopes: list[str],
+) -> tuple[str, int]:
+    signed_at = int(time.time() * 1000)
+    payload = "|".join([
+        "v2",
+        device_id,
+        "cli",
+        "cli",
+        "operator",
+        ",".join(scopes),
+        str(signed_at),
+        token,
+        nonce,
+    ])
+    signature = private_key.sign(payload.encode())
+    return _b64url(signature), signed_at
+
+
+# ---------------------------------------------------------------------------
+# Gateway WebSocket protocol
+# ---------------------------------------------------------------------------
+
+SCOPES = ["operator.admin"]
+
+
+async def _connect(ws, private_key: Ed25519PrivateKey, pub_b64: str, device_id: str) -> bool:
+    """Perform the openclaw gateway v3 connect handshake. Returns True on success."""
+    raw = await asyncio.wait_for(ws.recv(), timeout=5)
+    challenge = json.loads(raw)
+    nonce = challenge.get("payload", {}).get("nonce", "")
+    if not nonce:
+        print("Error: no nonce in gateway challenge", file=sys.stderr)
+        return False
+
+    sig, signed_at = _sign_connect_payload(
+        private_key, device_id=device_id, token=GATEWAY_TOKEN, nonce=nonce, scopes=SCOPES,
+    )
+    req = {
+        "type": "req",
+        "id": str(uuid.uuid4()),
+        "method": "connect",
+        "params": {
+            "minProtocol": 3,
+            "maxProtocol": 3,
+            "client": {"id": "cli", "version": "2026.2.25", "platform": "cli", "mode": "cli"},
+            "role": "operator",
+            "scopes": SCOPES,
+            "auth": {"token": GATEWAY_TOKEN},
+            "device": {
+                "id": device_id,
+                "publicKey": pub_b64,
+                "signature": sig,
+                "signedAt": signed_at,
+                "nonce": nonce,
+            },
+        },
+    }
+    await ws.send(json.dumps(req))
+
+    raw = await asyncio.wait_for(ws.recv(), timeout=5)
+    resp = json.loads(raw)
+
+    if resp.get("ok"):
+        return True
+
+    error = resp.get("error", {})
+    if error.get("code") == "NOT_PAIRED":
+        print(
+            "⚠  Device not yet paired with gateway.\n"
+            "   If gateway has autoApproveOperator=true this should resolve automatically.\n"
+            "   Otherwise run on the server: openclaw devices approve <request-id>",
+            file=sys.stderr,
+        )
+        return False
+
+    print(f"Error: gateway connect failed: {error}", file=sys.stderr)
+    return False
+
+
+async def _send_message(ws, text: str) -> str | None:
+    """Send chat.send and collect the final response (supports streaming deltas)."""
+    req = {
+        "type": "req",
+        "id": str(uuid.uuid4()),
+        "method": "chat.send",
+        "params": {
+            "message": text,
+            "sessionKey": SESSION_KEY,
+            "idempotencyKey": str(uuid.uuid4()),
+        },
+    }
+    await ws.send(json.dumps(req))
+
+    full_text = ""
+    last_printed_len = 0
+
+    while True:
+        try:
+            raw = await asyncio.wait_for(ws.recv(), timeout=TIMEOUT)
+        except TimeoutError:
+            print("\n[timeout waiting for response]", file=sys.stderr)
+            return full_text or None
+
+        msg = json.loads(raw)
+        msg_type = msg.get("type", "")
+
+        if msg_type == "event":
+            event_name = msg.get("event", "")
+            payload = msg.get("payload", {})
+
+            if event_name == "chat":
+                state = payload.get("state", "")
+                content = payload.get("message", {}).get("content", [])
+                text_parts = [c.get("text", "") for c in content if c.get("type") == "text"]
+                combined = "".join(text_parts)
+
+                if state == "delta" and combined:
+                    new_part = combined[last_printed_len:]
+                    if new_part:
+                        print(new_part, end="", flush=True)
+                        last_printed_len = len(combined)
+                    full_text = combined
+
+                elif state == "final":
+                    if combined:
+                        new_part = combined[last_printed_len:]
+                        if new_part:
+                            print(new_part, end="", flush=True)
+                    print()  # newline after response
+                    return combined or full_text or None
+
+        elif msg_type == "res":
+            if not msg.get("ok", True):
+                error = msg.get("error", msg.get("payload", {}))
+                print(f"\nError from gateway: {error}", file=sys.stderr)
+                return None
+
+
+# ---------------------------------------------------------------------------
+# High-level chat functions
+# ---------------------------------------------------------------------------
+
+
+async def _open_gateway():
+    """Ensure tunnel is up, then connect and authenticate to the gateway."""
+    if not GATEWAY_TOKEN:
+        print(
+            "Error: OPENCLAW_GATEWAY_TOKEN is not set.\n"
+            "Set it in ~/.openclaw/.env or export it as an environment variable.\n"
+            f"Retrieve with: ssh {SSH_HOST} 'openclaw config get gateway.auth.token'",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    _ensure_tunnel()
+
+    private_key, pub_b64, device_id = _load_or_create_device()
+
+    ws = await websockets.connect(GATEWAY_URL, open_timeout=5, close_timeout=3)
+    ok = await _connect(ws, private_key, pub_b64, device_id)
+    if not ok:
+        await ws.close()
+        sys.exit(1)
+
+    return ws
+
+
+async def single_shot(text: str) -> None:
+    """Send one message and print the response, then exit."""
+    ws = await _open_gateway()
+    try:
+        result = await _send_message(ws, text)
+        if result is None:
+            sys.exit(1)
+    finally:
+        await ws.close()
+
+
+async def interactive() -> None:
+    """REPL mode: keep connection open, send messages line by line."""
+    ws = await _open_gateway()
+    print(f"Connected to openclaw (session: {SESSION_KEY})")
+    print("Type a message and press Enter. Type 'exit' or Ctrl+C to quit.\n")
+
+    try:
+        while True:
+            try:
+                text = input("> ").strip()
+            except (EOFError, KeyboardInterrupt):
+                print("\nGoodbye!")
+                break
+
+            if not text:
+                continue
+            if text.lower() in ("exit", "quit", "q"):
+                print("Goodbye!")
+                break
+
+            result = await _send_message(ws, text)
+            if result is None:
+                print("[no response from gateway]", file=sys.stderr)
+                await ws.close()
+                ws = await _open_gateway()
+            print()  # blank line between exchanges
+    finally:
+        await ws.close()
+
+
+async def health_check() -> None:
+    """Check connectivity and print gateway status."""
+    ws = await _open_gateway()
+    await ws.close()
+    print(f"✓ Connected to openclaw gateway at localhost:{GATEWAY_PORT}")
+    print(f"  SSH host:    {SSH_HOST}")
+    print(f"  Session key: {SESSION_KEY}")
+    print(f"  Device file: {DEVICE_FILE}")
+
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        prog="openclaw-chat",
+        description="CLI client for your personal openclaw AI assistant",
+    )
+    parser.add_argument("message", nargs="?", help="Message to send (single-shot mode)")
+    parser.add_argument("--health", action="store_true", help="Check gateway connectivity")
+    args = parser.parse_args()
+
+    if args.health:
+        asyncio.run(health_check())
+    elif args.message:
+        asyncio.run(single_shot(args.message))
+    else:
+        asyncio.run(interactive())
+
+
+if __name__ == "__main__":
+    main()

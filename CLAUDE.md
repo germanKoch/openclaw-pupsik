@@ -22,6 +22,26 @@ Each MCP server follows this flow:
 
 Default SSH target is `hetzner-main` (overridable as first arg to setup scripts).
 
+## Skills
+
+Skills are agent prompts stored in `skills/<skill-name>/SKILL.md`. Each file has YAML frontmatter (`name`, `description`, `user-invocable`) followed by prompt instructions.
+
+Structure:
+```
+skills/
+  ticktick-inbox/
+    SKILL.md
+```
+
+To add a new skill:
+1. Create `skills/<skill-name>/SKILL.md` with YAML frontmatter and prompt
+2. Deploy with `./scripts/deploy-skills.sh`
+
+Deploy skills to remote:
+```
+./scripts/deploy-skills.sh [ssh-host]
+```
+
 ## Commands
 
 Deploy an MCP server to remote:
@@ -30,3 +50,10 @@ Deploy an MCP server to remote:
 ./scripts/setup-google-calendar-mcp.sh [ssh-host]
 ./scripts/setup-zenmoney-mcp.sh [ssh-host]
 ```
+
+## Active Technologies
+- Go (gateway + CLI binary), Bash (setup scripts) + Anthropic API, Telegram Bot API, mcporter, MCP protocol (existing) (001-cli-shared-session)
+- JSON file — `~/.openclaw/sessions/default.json` on the gateway server (001-cli-shared-session)
+
+## Recent Changes
+- 001-cli-shared-session: Added Go (gateway + CLI binary), Bash (setup scripts) + Anthropic API, Telegram Bot API, mcporter, MCP protocol (existing)

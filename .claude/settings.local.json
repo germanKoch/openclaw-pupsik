@@ -9,7 +9,19 @@
       "Bash(gh api:*)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(git -C /Users/germankochnev/Desktop/projects/utils/mcp/zenmoney-mcp remote -v)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(git fetch:*)",
+      "Bash(ls:*)",
+      "Bash(.specify/scripts/bash/create-new-feature.sh:*)",
+      "WebFetch(domain:docs.openclaw.ai)",
+      "Bash(.specify/scripts/bash/setup-plan.sh:*)",
+      "Bash(chmod +x:*)",
+      "Bash(.specify/scripts/bash/update-agent-context.sh claude:*)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh:*)",
+      "Bash(python3:*)",
+      "Bash(bash:*)",
+      "Bash(./scripts/setup-cli.sh:*)",
+      "Bash(~/.local/bin/openclaw-chat:*)"
     ]
   }
 }
