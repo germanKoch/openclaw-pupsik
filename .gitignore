@@ -5,6 +5,8 @@
 *.secret
 tokens/
 oauth-tokens/
+.token.json
+google_client_secret.json
 
 # Python (openclaw-chat script)
 __pycache__/
