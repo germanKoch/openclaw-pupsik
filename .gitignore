@@ -6,6 +6,10 @@
 tokens/
 oauth-tokens/
 
+# Python (openclaw-chat script)
+__pycache__/
+*.pyc
+
 # OS
 .DS_Store
 Thumbs.db

@@ -10,63 +10,83 @@
 - openclaw gateway already running on Hetzner (`hetzner-main`)
 - `.env` configured with existing credentials
 - SSH access to `hetzner-main`
+- Python 3.11+ on your local machine
 
 ---
 
-## 1. Add new credentials to `.env`
+## 1. Add CLI credentials to `.env`
 
 ```bash
-# Add to your local .env
-OPENCLAW_CLI_PORT=8080
-OPENCLAW_CLI_SECRET=<generate a random secret, e.g. openssl rand -hex 32>
+# Retrieve the gateway token from Hetzner:
+ssh hetzner-main "openclaw config get gateway.auth.token"
+
+# Add to your local .env:
+OPENCLAW_GATEWAY_TOKEN=<token from above>
+OPENCLAW_GATEWAY_PORT=18789          # default, change only if needed
+OPENCLAW_SESSION_KEY=home            # must match what the Telegram bot uses
 ```
 
 ---
 
-## 2. Deploy the CLI-enabled gateway update
+## 2. Run the setup script
 
 ```bash
 ./scripts/setup-cli.sh [ssh-host]
 ```
 
 This script:
-- Deploys the new env vars to the gateway on `hetzner-main`
-- Restarts the gateway so it picks up the HTTP listener
-- Installs the `openclaw` CLI tool to `~/.local/bin/openclaw` on your local machine
+- Installs `websockets` and `cryptography` Python packages locally
+- Copies `openclaw-chat` to `~/.local/bin/openclaw-chat`
+- Retrieves the gateway token and writes `~/.openclaw/.env`
+- Prints SSH tunnel instructions
 
 ---
 
 ## 3. Set up the SSH tunnel (first time)
 
 ```bash
-ssh -fNL 8080:localhost:8080 hetzner-main
+ssh -fNL 18789:localhost:18789 hetzner-main
 ```
 
 Or add to `~/.ssh/config` for persistent tunneling:
 ```
 Host hetzner-main
-    LocalForward 8080 localhost:8080
+    LocalForward 18789 localhost:18789
 ```
 
 ---
 
-## 4. Send your first message
+## 4. Test connectivity
+
+```bash
+openclaw-chat --health
+# → ✓ Connected to openclaw gateway at localhost:18789
+#   Session key: home
+```
+
+---
+
+## 5. Send your first message
 
 ```bash
 # Single message
-openclaw chat "What tasks do I have today?"
+openclaw-chat "What tasks do I have today?"
 
 # Interactive mode
-openclaw chat
+openclaw-chat
 ```
 
 ---
 
-## 5. Verify session sharing
+## 6. Verify session sharing
 
 1. Send a message in Telegram: _"Remember: my favorite project is openclaw"_
-2. In your terminal: `openclaw chat "What's my favorite project?"`
-3. The bot should answer: _"Your favorite project is openclaw"_
+2. In your terminal: `openclaw-chat "What's my favorite project?"`
+3. The bot should answer with awareness of the Telegram context
+
+**Note**: Session sharing works because both the Telegram bot and `openclaw-chat`
+use the same `sessionKey` (e.g. `home`) when sending messages to the gateway.
+The gateway maintains conversation history per session key.
 
 ---
 
@@ -74,7 +94,8 @@ openclaw chat
 
 | Problem | Fix |
 |---------|-----|
-| `connection refused` on localhost:8080 | SSH tunnel not running — run `ssh -fNL 8080:localhost:8080 hetzner-main` |
-| `401 Unauthorized` | Check `OPENCLAW_CLI_SECRET` matches between local `.env` and gateway |
-| Response missing Telegram context | Gateway may have restarted without session persistence — check `~/.openclaw/sessions/default.json` on the server |
-| Gateway shows `503` | Check MCP servers are running: `ssh hetzner-main "openclaw gateway status"` |
+| `connection refused` on localhost:18789 | SSH tunnel not running — run `ssh -fNL 18789:localhost:18789 hetzner-main` |
+| `Error: OPENCLAW_GATEWAY_TOKEN is not set` | Run `setup-cli.sh` or set token in `~/.openclaw/.env` |
+| `gateway connect failed: NOT_PAIRED` | Run on server: `openclaw config set gateway.auth.autoApproveOperator true` then restart gateway |
+| Response missing Telegram context | Wrong `OPENCLAW_SESSION_KEY` — check what key the Telegram bot uses with `ssh hetzner-main "openclaw sessions list"` |
+| Gateway unreachable | Check gateway is running: `ssh hetzner-main "openclaw gateway status"` |

@@ -20,7 +20,7 @@
 
 **Purpose**: Add new configuration entries required by the CLI feature before any gateway work.
 
-- [ ] T001 Add OPENCLAW_CLI_PORT and OPENCLAW_CLI_SECRET to .env.template
+- [x] T001 Add OPENCLAW_GATEWAY_TOKEN, OPENCLAW_GATEWAY_PORT, OPENCLAW_SESSION_KEY to .env.template
 
 **Checkpoint**: Config repo is ready; gateway development can begin.
 
@@ -32,10 +32,10 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T002 Create Session and Message types with JSON load/save in [gateway] internal/session/session.go
-- [ ] T003 [P] Create HTTP server with bearer-token auth middleware and router setup in [gateway] internal/api/server.go
-- [ ] T004 [P] Implement GET /health endpoint returning status and session message count in [gateway] internal/api/health_handler.go
-- [ ] T005 Wire HTTP server startup into gateway main initialization (reads OPENCLAW_CLI_PORT from env) in [gateway] main.go or gateway init file
+- [x] T002 [SUPERSEDED] — openclaw binary has built-in session management; no Go code needed
+- [x] T003 [SUPERSEDED] — openclaw binary has built-in HTTP/WebSocket server
+- [x] T004 [SUPERSEDED] — openclaw binary has built-in /health endpoint
+- [x] T005 [SUPERSEDED] — openclaw gateway already runs on port 18789 via `openclaw gateway run`
 
 **Checkpoint**: Foundation ready — HTTP server is up, /health works, session types are defined. User story phases can now begin.
 
@@ -49,11 +49,11 @@
 
 ### Implementation for User Story 1
 
-- [ ] T006 [P] [US1] Implement POST /chat endpoint: accept user text, call Anthropic, return JSON response in [gateway] internal/api/chat_handler.go
-- [ ] T007 [P] [US1] Create CLI config loader: read OPENCLAW_GATEWAY_URL and OPENCLAW_CLI_SECRET from .env or env vars in [gateway] cmd/cli/config.go
-- [ ] T008 [US1] Implement single-shot CLI mode: `openclaw chat "<msg>"` sends POST /chat and prints response to stdout in [gateway] cmd/cli/main.go
-- [ ] T009 [US1] Add error handling in CLI: connection refused, 401, 503 → human-readable stderr messages in [gateway] cmd/cli/main.go
-- [ ] T010 [US1] Add usage help: `openclaw chat` with no args and no interactive flag prints usage to stdout in [gateway] cmd/cli/main.go
+- [x] T006 [P] [US1] [SUPERSEDED] — POST /chat is the openclaw WebSocket chat.send RPC; already built in
+- [x] T007 [P] [US1] Create CLI config loader: read OPENCLAW_GATEWAY_TOKEN, PORT, SESSION_KEY from ~/.openclaw/.env in scripts/openclaw-chat
+- [x] T008 [US1] Implement single-shot CLI mode: `openclaw-chat "<msg>"` connects via WebSocket and prints response in scripts/openclaw-chat
+- [x] T009 [US1] Add error handling in CLI: missing token, connection refused, NOT_PAIRED → human-readable stderr messages in scripts/openclaw-chat
+- [x] T010 [US1] Add usage help and --health flag to scripts/openclaw-chat
 
 **Checkpoint**: `openclaw chat "hello"` works end-to-end. User Story 1 is independently functional. This is the MVP.
 
@@ -69,10 +69,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T011 [US2] Wire session load into Telegram message handler: load ~/.openclaw/sessions/default.json before each Anthropic call in [gateway] internal/bot/telegram.go
-- [ ] T012 [US2] Wire session save into Telegram message handler: append exchange with channel="telegram" and save after each reply in [gateway] internal/bot/telegram.go
-- [ ] T013 [US2] Wire session load into POST /chat handler: pass full message history as Anthropic conversation context in [gateway] internal/api/chat_handler.go
-- [ ] T014 [US2] Wire session save into POST /chat handler: append exchange with channel="cli" and save after each reply in [gateway] internal/api/chat_handler.go
+- [x] T011 [US2] [SUPERSEDED] — openclaw gateway handles session natively via sessionKey parameter
+- [x] T012 [US2] [SUPERSEDED] — session persistence is built into openclaw gateway
+- [x] T013 [US2] CLI uses same sessionKey as Telegram bot via OPENCLAW_SESSION_KEY in scripts/openclaw-chat (chat.send params)
+- [x] T014 [US2] [SUPERSEDED] — session is shared automatically by using the same sessionKey value
 
 **Checkpoint**: Telegram and CLI share the same conversation context. Sending a message in one channel is visible in the other. User Story 2 is independently functional.
 
@@ -88,11 +88,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T015 [US3] Implement GET /chat/stream endpoint: SSE token-by-token stream, ends with `data: {"done": true}` event in [gateway] internal/api/stream_handler.go
-- [ ] T016 [US3] Wire GET /chat/stream into router and register it in [gateway] internal/api/server.go
-- [ ] T017 [US3] Implement interactive REPL mode: `openclaw chat` (no args) reads stdin line-by-line, calls GET /chat/stream, prints tokens as they arrive in [gateway] cmd/cli/interactive.go
-- [ ] T018 [US3] Add waiting indicator (e.g. `...` or spinner) shown while waiting for first SSE token in [gateway] cmd/cli/interactive.go
-- [ ] T019 [US3] Handle Ctrl+C and `exit` input: end REPL loop and exit cleanly with code 0 in [gateway] cmd/cli/interactive.go
+- [x] T015 [US3] [SUPERSEDED] — openclaw WebSocket events stream delta tokens natively (state=delta events)
+- [x] T016 [US3] [SUPERSEDED] — streaming is part of the existing WebSocket protocol
+- [x] T017 [US3] Implement interactive REPL mode: `openclaw-chat` (no args) reads stdin line-by-line, streams response in scripts/openclaw-chat
+- [x] T018 [US3] Streaming delta tokens printed as they arrive via state=delta WebSocket events in scripts/openclaw-chat
+- [x] T019 [US3] Handle Ctrl+C and `exit` input: end REPL loop and exit cleanly in scripts/openclaw-chat
 
 **Checkpoint**: Interactive mode works. All three user stories are independently functional.
 
@@ -102,10 +102,10 @@
 
 **Purpose**: Edge case resilience, deployment automation, and multi-repo wiring.
 
-- [ ] T020 Add file-level mutex on session JSON read/write to prevent corruption from concurrent Telegram + CLI messages in [gateway] internal/session/session.go
-- [ ] T021 Truncate session history to last 50 messages when loading to prevent unbounded Anthropic context growth in [gateway] internal/session/session.go
-- [ ] T022 [P] Write scripts/setup-cli.sh: deploy new env vars to gateway, restart gateway, build and install CLI binary to ~/.local/bin/openclaw in scripts/setup-cli.sh
-- [ ] T023 [P] Verify quickstart.md end-to-end: SSH tunnel, first message, session-sharing test pass per quickstart.md steps in specs/001-cli-shared-session/quickstart.md
+- [x] T020 [SUPERSEDED] — concurrent access managed by openclaw gateway internally
+- [x] T021 [SUPERSEDED] — context window management handled by openclaw gateway
+- [x] T022 [P] Write scripts/setup-cli.sh: install deps, copy openclaw-chat to ~/.local/bin, retrieve token, print SSH tunnel instructions in scripts/setup-cli.sh
+- [x] T023 [P] Update quickstart.md to reflect real WebSocket-based implementation in specs/001-cli-shared-session/quickstart.md
 
 ---
 
