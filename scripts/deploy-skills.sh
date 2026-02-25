@@ -6,7 +6,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 SSH_HOST="${1:-hetzner-main}"
-REMOTE_SKILLS_DIR="\$HOME/.openclaw/skills"
+REMOTE_SKILLS_DIR="\$HOME/.openclaw/workspace/skills"
 
 echo "=== Deploying skills to $SSH_HOST ==="
 
@@ -15,7 +15,7 @@ ssh "$SSH_HOST" "mkdir -p $REMOTE_SKILLS_DIR"
 
 # Sync skills directory
 echo "Copying skills..."
-rsync -av --delete "$REPO_DIR/skills/" "$SSH_HOST:~/.openclaw/skills/"
+rsync -av --delete "$REPO_DIR/skills/" "$SSH_HOST:~/.openclaw/workspace/skills/"
 
 echo "Skills deployed:"
 ssh "$SSH_HOST" "ls -1 $REMOTE_SKILLS_DIR"
