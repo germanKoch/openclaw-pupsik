@@ -12,13 +12,12 @@
       "mcporter_scope": "home"
     },
     "ticktick": {
-      "source": "https://github.com/jacepark12/ticktick-mcp",
-      "install_path": "/opt/mcp-servers/ticktick-mcp",
+      "source": "https://github.com/alexarevalo9/ticktick-mcp-server",
       "transport": "stdio",
-      "command": "/opt/mcp-servers/ticktick-mcp/.venv/bin/python",
-      "args": ["-m", "ticktick_mcp.cli", "run"],
-      "env_vars": ["TICKTICK_ACCESS_TOKEN", "TICKTICK_CLIENT_ID", "TICKTICK_CLIENT_SECRET", "TICKTICK_TIMEZONE"],
-      "description": "TickTick task management via MCP",
+      "command": "npx",
+      "args": ["-y", "@alexarevalo.ai/mcp-server-ticktick"],
+      "env_vars": ["TICKTICK_CLIENT_ID", "TICKTICK_CLIENT_SECRET", "TICKTICK_ACCESS_TOKEN"],
+      "description": "TickTick task management via MCP (projects, subtasks, habits)",
       "managed_by": "mcporter",
       "mcporter_scope": "home"
     },
