@@ -22,6 +22,8 @@ Each MCP server follows this flow:
 
 Default SSH target is `hetzner-main` (overridable as first arg to setup scripts).
 
+Full integration guide with auth patterns and troubleshooting: [`docs/mcp-integration.md`](docs/mcp-integration.md)
+
 ## Skills
 
 Skills are agent prompts stored in `skills/<skill-name>/SKILL.md`. Each file has YAML frontmatter (`name`, `description`, `user-invocable`) followed by prompt instructions.
