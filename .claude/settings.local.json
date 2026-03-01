@@ -21,7 +21,13 @@
       "Bash(python3:*)",
       "Bash(bash:*)",
       "Bash(./scripts/setup-cli.sh:*)",
-      "Bash(~/.local/bin/openclaw-chat:*)"
+      "Bash(~/.local/bin/openclaw-chat:*)",
+      "WebFetch(domain:dev.max.ru)",
+      "WebFetch(domain:habr.com)",
+      "WebFetch(domain:play.google.com)",
+      "WebFetch(domain:tallanto.com)",
+      "Bash(./scripts/deploy-skills.sh:*)",
+      "WebFetch(domain:packagist.org)"
     ]
   }
 }
