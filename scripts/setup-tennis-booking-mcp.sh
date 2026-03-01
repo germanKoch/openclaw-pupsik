@@ -71,29 +71,34 @@ fi
 
 echo "=== Setting up tennis-booking-mcp on $SSH_HOST ==="
 
-# Ensure uv and mcporter are available on remote
-ssh "$SSH_HOST" bash <<'REMOTE'
+# Install deps, clone repo, create venv — all in one SSH session
+echo "Installing dependencies and cloning repository..."
+ssh "$SSH_HOST" bash <<REMOTE
 set -euo pipefail
+export PATH="\$HOME/.local/bin:\$PATH"
+
+# Ensure uv is available
 if ! command -v uv >/dev/null 2>&1; then
   echo "Installing uv..."
   curl -LsSf https://astral.sh/uv/install.sh | sh
+  export PATH="\$HOME/.local/bin:\$PATH"
 fi
+
+# Ensure mcporter is available
 if ! command -v mcporter >/dev/null 2>&1; then
   echo "Installing mcporter..."
   npm install -g mcporter
 fi
-REMOTE
 
 # Clone or update the repository
-echo "Cloning/updating repository..."
-ssh "$SSH_HOST" bash <<REMOTE
-set -euo pipefail
 if [ -d "$REMOTE_DIR/.git" ]; then
   cd "$REMOTE_DIR"
   git pull --ff-only
 else
   git clone "$GIT_REPO" "$REMOTE_DIR"
 fi
+
+# Install Python dependencies
 cd "$REMOTE_DIR"
 uv venv
 uv sync
