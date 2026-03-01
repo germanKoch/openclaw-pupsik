@@ -56,6 +56,8 @@ Deploy an MCP server to remote:
 ## Active Technologies
 - Go (gateway + CLI binary), Bash (setup scripts) + Anthropic API, Telegram Bot API, mcporter, MCP protocol (existing) (001-cli-shared-session)
 - JSON file — `~/.openclaw/sessions/default.json` on the gateway server (001-cli-shared-session)
+- Python 3.11+ + `mcp>=1.0.0` (MCP SDK with FastMCP), `httpx` (async HTTP client for Tallanto API) (002-tennis-booking-mcp)
+- JSON token file (`.token.json`) for Tallanto session credentials (002-tennis-booking-mcp)
 
 ## Recent Changes
 - 001-cli-shared-session: Added Go (gateway + CLI binary), Bash (setup scripts) + Anthropic API, Telegram Bot API, mcporter, MCP protocol (existing)

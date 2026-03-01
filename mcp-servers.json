@@ -32,6 +32,17 @@
       "description": "ZenMoney finance tracking via MCP",
       "managed_by": "mcporter",
       "mcporter_scope": "home"
+    },
+    "tennis-booking": {
+      "source": "https://github.com/germanKoch/tennis-booking-mcp",
+      "install_path": "/opt/mcp-servers/tennis-booking-mcp",
+      "transport": "stdio",
+      "command": "/opt/mcp-servers/tennis-booking-mcp/.venv/bin/python",
+      "args": ["-m", "tennis_booking_mcp"],
+      "env_vars": ["TALLANTO_BASE_URL", "TALLANTO_USERNAME", "TALLANTO_PASSWORD_HASH"],
+      "description": "Tennis court booking via Tallanto API (T14 club)",
+      "managed_by": "mcporter",
+      "mcporter_scope": "home"
     }
   }
 }

@@ -27,7 +27,11 @@
       "WebFetch(domain:play.google.com)",
       "WebFetch(domain:tallanto.com)",
       "Bash(./scripts/deploy-skills.sh:*)",
-      "WebFetch(domain:packagist.org)"
+      "WebFetch(domain:packagist.org)",
+      "WebFetch(domain:teachers.tallanto.com)",
+      "WebFetch(domain:docs.suitecrm.com)",
+      "WebFetch(domain:apps.apple.com)",
+      "Bash(uv:*)"
     ]
   }
 }
