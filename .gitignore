@@ -8,6 +8,10 @@ oauth-tokens/
 .token.json
 google_client_secret.json
 
+# VPN configs (contain private keys)
+*.conf
+*.ovpn
+
 # Python (openclaw-chat script)
 __pycache__/
 *.pyc
