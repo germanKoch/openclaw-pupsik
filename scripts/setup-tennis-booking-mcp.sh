@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Setup tennis-booking-mcp on a remote server
 # Usage: ./setup-tennis-booking-mcp.sh [ssh-host]
-# Requires: .env in repo root with TALLANTO_BASE_URL, TALLANTO_USERNAME, TALLANTO_PASSWORD_HASH
+# Requires: .env in repo root with TALLANTO_BASE_URL, TALLANTO_USERNAME, TALLANTO_PASSWORD
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -45,7 +45,7 @@ strip_quotes() {
 
 TALLANTO_BASE_URL="$(strip_quotes "$(read_env_var TALLANTO_BASE_URL)")"
 TALLANTO_USERNAME="$(strip_quotes "$(read_env_var TALLANTO_USERNAME)")"
-TALLANTO_PASSWORD_HASH="$(strip_quotes "$(read_env_var TALLANTO_PASSWORD_HASH)")"
+TALLANTO_PASSWORD="$(strip_quotes "$(read_env_var TALLANTO_PASSWORD)")"
 HETZNER_SSH_HOST="$(strip_quotes "$(read_env_var HETZNER_SSH_HOST)")"
 
 if [ -n "$SSH_HOST_ARG" ]; then
@@ -64,8 +64,8 @@ if [ -z "${TALLANTO_USERNAME:-}" ]; then
   echo "Error: TALLANTO_USERNAME is empty in .env."
   exit 1
 fi
-if [ -z "${TALLANTO_PASSWORD_HASH:-}" ]; then
-  echo "Error: TALLANTO_PASSWORD_HASH is empty in .env."
+if [ -z "${TALLANTO_PASSWORD:-}" ]; then
+  echo "Error: TALLANTO_PASSWORD is empty in .env."
   exit 1
 fi
 
@@ -106,7 +106,7 @@ ssh "$SSH_HOST" "mcporter config add tennis-booking \
   --arg '-m' --arg 'tennis_booking_mcp' \
   --env 'TALLANTO_BASE_URL=${TALLANTO_BASE_URL}' \
   --env 'TALLANTO_USERNAME=${TALLANTO_USERNAME}' \
-  --env 'TALLANTO_PASSWORD_HASH=${TALLANTO_PASSWORD_HASH}' \
+  --env 'TALLANTO_PASSWORD=${TALLANTO_PASSWORD}' \
   --scope home \
   --description 'Tennis court booking via Tallanto API (T14 club)' 2>/dev/null || echo 'Already registered'"
 

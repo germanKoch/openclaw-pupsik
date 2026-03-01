@@ -31,7 +31,18 @@
       "WebFetch(domain:teachers.tallanto.com)",
       "WebFetch(domain:docs.suitecrm.com)",
       "WebFetch(domain:apps.apple.com)",
-      "Bash(uv:*)"
+      "Bash(uv:*)",
+      "Bash(curl:*)",
+      "Bash(brew install:*)",
+      "Bash(pgrep:*)",
+      "Bash(security find-certificate:*)",
+      "Bash(open:*)",
+      "Bash(networksetup:*)",
+      "Bash(sudo networksetup:*)",
+      "Bash(lsof:*)",
+      "Bash(kill 9360:*)",
+      "Bash(TALLANTO_BASE_URL=\"https://t14.tallanto.com/service/v4_client/rest.php\" TALLANTO_USERNAME=\"test@test.com\" TALLANTO_PASSWORD=\"test\" uv run:*)",
+      "Bash(TALLANTO_BASE_URL=\"https://t14.tallanto.com/service/v4_client/rest.php\" TALLANTO_USERNAME=\"germikgerman@gmail.com\" TALLANTO_PASSWORD=\"029266\" uv run:*)"
     ]
   }
 }
