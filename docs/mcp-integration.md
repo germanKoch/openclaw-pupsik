@@ -95,6 +95,33 @@ OAuth token stored as `.token.json` in the server directory. The server handles 
 scp .token.json hetzner-main:/opt/mcp-servers/zenmoney-mcp/.token.json
 ```
 
+### Telegram UserAPI StringSession (telegram-userapi)
+
+Telethon `StringSession` — one-time interactive auth that produces a Base64 token. The token is permanent (until revoked in Telegram Settings > Devices).
+
+**Prerequisites:**
+1. Get `TELEGRAM_API_ID` and `TELEGRAM_API_HASH` at https://my.telegram.org/apps (platform: Desktop)
+2. Add both to `.env`
+
+**Generate session:**
+```bash
+uv run --with telethon python scripts/generate-telegram-session.py
+```
+
+The script will ask for your phone number and the code from Telegram, then write `TELEGRAM_SESSION_STRING` to `.env`.
+
+**Deploy:**
+```bash
+./scripts/setup-telegram-userapi-mcp.sh
+```
+
+**Blocklist (optional):** copy `telegram-blocked-chats.json.template` to `telegram-blocked-chats.json` and add chats to block from reading. The file is deployed to the server via SCP. Matching rules:
+- `id` — exact numeric chat ID
+- `username` — case-insensitive, without `@`
+- `title` — exact match, case-sensitive
+
+**Session expired/revoked:** re-run `generate-telegram-session.py` and redeploy.
+
 ### Google OAuth with local callback (google-calendar)
 
 The `@cocal/google-calendar-mcp` package runs a local HTTP server on port 3501 for the OAuth callback. Since the server is headless (no browser), use an SSH tunnel:
@@ -165,6 +192,23 @@ Common causes:
 - Access revoked in [Google Account Security](https://myaccount.google.com/permissions)
 - Too many tokens issued (Google invalidates old ones)
 
+### Telegram UserAPI: session expired
+
+Symptom: `AuthKeyUnregisteredError` or "Session is not authorized" in tool output.
+
+```bash
+# Re-generate session locally
+uv run --with telethon python scripts/generate-telegram-session.py
+
+# Redeploy
+./scripts/setup-telegram-userapi-mcp.sh
+```
+
+Common causes:
+- Session terminated in Telegram Settings > Devices
+- Account password changed (terminates all sessions)
+- Telegram security reset
+
 ### Server not responding after deploy
 
 ```bash
@@ -191,5 +235,6 @@ ssh hetzner-main "journalctl -u openclaw-gateway -n 50 --no-pager"
 | MCP server code | `/opt/mcp-servers/<name>/` |
 | Google Calendar OAuth keys | `/opt/mcp-servers/google-calendar-mcp/gcp-oauth.keys.json` |
 | Google Calendar tokens | `/root/.config/google-calendar-mcp/tokens.json` |
-| mcporter config | `mcporter config list` |
-| Gateway service | `openclaw-gateway.service` (systemd) |
+| Telegram UserAPI blocklist | `/opt/mcp-servers/telegram-userapi-mcp/blocked-chats.json` |
+| mcporter config            | `mcporter config list` |
+| Gateway service            | `openclaw-gateway.service` (systemd) |
