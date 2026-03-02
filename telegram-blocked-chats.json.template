@@ -1,0 +1,7 @@
+{
+  "blocked_chats": [
+    {"id": 123456789, "comment": "Example: block by numeric chat ID"},
+    {"username": "secret_channel", "comment": "Example: block by @username (without @)"},
+    {"title": "Private Group", "comment": "Example: block by exact chat title (case-sensitive)"}
+  ]
+}

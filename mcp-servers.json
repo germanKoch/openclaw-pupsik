@@ -43,6 +43,18 @@
       "description": "Tennis court booking via Tallanto API (T14 club)",
       "managed_by": "mcporter",
       "mcporter_scope": "home"
+    },
+    "telegram-userapi": {
+      "source": "https://github.com/germanKoch/telegram-userapi-mcp",
+      "install_path": "/opt/mcp-servers/telegram-userapi-mcp",
+      "transport": "stdio",
+      "command": "/opt/mcp-servers/telegram-userapi-mcp/.venv/bin/python",
+      "args": ["-m", "telegram_userapi_mcp"],
+      "env_vars": ["TELEGRAM_API_ID", "TELEGRAM_API_HASH", "TELEGRAM_SESSION_STRING"],
+      "config_files": ["blocked-chats.json"],
+      "description": "Telegram personal account messaging via Telethon UserAPI",
+      "managed_by": "mcporter",
+      "mcporter_scope": "home"
     }
   }
 }

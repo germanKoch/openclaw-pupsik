@@ -7,6 +7,7 @@ tokens/
 oauth-tokens/
 .token.json
 google_client_secret.json
+telegram-blocked-chats.json
 
 # VPN configs (contain private keys)
 *.conf
