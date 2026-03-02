@@ -22,6 +22,8 @@ Each MCP server follows this flow:
 
 Default SSH target is `hetzner-main` (overridable as first arg to setup scripts).
 
+**Rule: repo is the source of truth.** Every change deployed to the remote server MUST be represented in this repository (config files, skills, scripts, templates). The repo should be sufficient to fully recreate the server setup from scratch on a new host. Never deploy changes that exist only on the remote — always commit to the repo first, then deploy.
+
 Full integration guide with auth patterns and troubleshooting: [`docs/mcp-integration.md`](docs/mcp-integration.md)
 
 ## Skills
@@ -58,6 +60,8 @@ Deploy an MCP server to remote:
 - JSON file — `~/.openclaw/sessions/default.json` on the gateway server (001-cli-shared-session)
 - Python 3.11+ + `mcp>=1.0.0` (MCP SDK with FastMCP), `httpx` (async HTTP client for Tallanto API) (002-tennis-booking-mcp)
 - JSON token file (`.token.json`) for Tallanto session credentials (002-tennis-booking-mcp)
+- Markdown (SKILL.md agent prompt) — no application code needed + ZenMoney MCP server (8 tools: `get_transactions`, `get_categories`, `get_accounts`, `get_budgets`), OpenClaw cron scheduler (003-financial-analysis)
+- Workspace files at `~/.openclaw/workspace/financial-analysis/` (Markdown + structured data) (003-financial-analysis)
 
 ## Recent Changes
 - 001-cli-shared-session: Added Go (gateway + CLI binary), Bash (setup scripts) + Anthropic API, Telegram Bot API, mcporter, MCP protocol (existing)
