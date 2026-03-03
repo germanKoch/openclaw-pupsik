@@ -55,6 +55,17 @@
       "description": "Telegram personal account messaging via Telethon UserAPI",
       "managed_by": "mcporter",
       "mcporter_scope": "home"
+    },
+    "bestchange": {
+      "source": "https://github.com/germanKoch/bestchange-mcp",
+      "install_path": "/opt/mcp-servers/bestchange-mcp",
+      "transport": "stdio",
+      "command": "/opt/mcp-servers/bestchange-mcp/.venv/bin/python",
+      "args": ["-m", "bestchange_mcp"],
+      "env_vars": ["BESTCHANGE_API_KEY"],
+      "description": "BestChange exchange aggregator — live crypto/fiat rates across 300+ exchangers",
+      "managed_by": "mcporter",
+      "mcporter_scope": "home"
     }
   }
 }
