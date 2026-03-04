@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 # Deploy skills to the remote OpenClaw host
-# Routes each skill to the correct agent workspace:
-#   - financial-analysis → workspace-money
-#   - daily-planner, ticktick-inbox, diary-add → workspace-schedule
-#   - tennis-booking → workspace (main)
+# All skills go to ~/.openclaw/workspace/skills/ (gateway discovery path).
 #
 # Usage: ./scripts/deploy-skills.sh [ssh-host]
 set -euo pipefail
@@ -14,22 +11,11 @@ SSH_HOST="${1:-hetzner-main}"
 
 echo "=== Deploying skills to $SSH_HOST ==="
 
-# Skill → workspace routing (skill-name:workspace-subdir)
-skill_workspace() {
-    case "$1" in
-        financial-analysis) echo "workspace-money" ;;
-        daily-planner|ticktick-inbox|diary-add) echo "workspace-schedule" ;;
-        *) echo "workspace" ;;
-    esac
-}
-
 deploy_skill() {
     local skill="$1"
-    local workspace
-    workspace=$(skill_workspace "$skill")
-    local remote_dir="~/.openclaw/$workspace/skills/$skill"
+    local remote_dir="~/.openclaw/workspace/skills/$skill"
 
-    echo "  $skill → $workspace"
+    echo "  $skill"
     ssh "$SSH_HOST" "mkdir -p $remote_dir"
     scp "$REPO_DIR/skills/$skill/SKILL.md" "$SSH_HOST:$remote_dir/SKILL.md"
 }
@@ -77,11 +63,3 @@ fi
 
 echo ""
 echo "=== Done! Skills deployed to $SSH_HOST ==="
-echo ""
-echo "Skill routing:"
-for skill_dir in "$REPO_DIR/skills"/*/; do
-    skill=$(basename "$skill_dir")
-    workspace=$(skill_workspace "$skill")
-    agent=$(echo "$workspace" | sed 's/workspace-//' | sed 's/^workspace$/main/')
-    echo "  /$(echo "$skill" | tr - _)  →  agent:$agent"
-done

@@ -1,6 +1,7 @@
 ---
 name: diary-add
-description: Add a new diary entry to TickTick when the user writes "#D" (or asks to add to diary). Use for quick journaling capture: parse the message after #D, append it to CLAWD/diary note in TickTick, and confirm it was saved.
+description: "Add a new diary entry to TickTick when the user writes #D (or asks to add to diary). Quick journaling capture: parse the message, append to CLAWD/diary note in TickTick."
+user-invocable: true
 ---
 
 # diary-add

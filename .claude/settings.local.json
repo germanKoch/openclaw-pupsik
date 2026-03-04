@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "WebSearch"
+      "WebSearch",
+      "Bash(ssh hetzner-main:*)",
+      "Bash(./scripts/deploy-skills.sh:*)"
     ],
     "deny": [
       "Bash(rm -rf:*)",
