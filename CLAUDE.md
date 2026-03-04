@@ -62,6 +62,8 @@ Deploy an MCP server to remote:
 - JSON token file (`.token.json`) for Tallanto session credentials (002-tennis-booking-mcp)
 - Markdown (SKILL.md agent prompt) — no application code needed + ZenMoney MCP server (8 tools: `get_transactions`, `get_categories`, `get_accounts`, `get_budgets`), OpenClaw cron scheduler (003-financial-analysis)
 - Workspace files at `~/.openclaw/workspace/financial-analysis/` (Markdown + structured data) (003-financial-analysis)
+- JavaScript/Node.js (MCP patch) + Markdown (SKILL.md agent prompts) + `@alexarevalo.ai/mcp-server-ticktick` npm package (patched locally), OpenClaw gateway, mcporter (004-ticktick-tag-notation)
+- N/A — tags stored in TickTick tasks via API; no additional workspace files (004-ticktick-tag-notation)
 
 ## Recent Changes
 - 001-cli-shared-session: Added Go (gateway + CLI binary), Bash (setup scripts) + Anthropic API, Telegram Bot API, mcporter, MCP protocol (existing)
