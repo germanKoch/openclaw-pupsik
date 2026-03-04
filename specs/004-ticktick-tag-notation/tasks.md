@@ -17,7 +17,7 @@
 
 **Purpose**: Confirm the deployment environment supports the MCP patch before any code is written.
 
-- [ ] T001 Verify hetzner-main has Node.js 18+ and npm available: `ssh hetzner-main "node -v && npm -v"`
+- [X] T001 Verify hetzner-main has Node.js 18+ and npm available: `ssh hetzner-main "node -v && npm -v"`
 
 ---
 
@@ -27,17 +27,17 @@
 
 **⚠️ CRITICAL**: All user story phases depend on this phase completing first.
 
-- [ ] T002 Create `scripts/patch-ticktick-mcp-tags.sh` — script that: (1) installs `@alexarevalo.ai/mcp-server-ticktick` to `/opt/mcp-servers/ticktick-mcp/` via npm, (2) patches `dist/common/types.js` to add `tags: z.array(z.string()).optional()` to `TickTickTaskSchema`, (3) patches `dist/operations/tasks.js` to add `tags: z.array(z.string()).optional().describe('Task tags, e.g. ["DUE/D_2026.12.31"]')` to both `CreateTaskOptionsSchema` and `UpdateTaskOptionsSchema`, (4) updates mcporter config to use `node /opt/mcp-servers/ticktick-mcp/node_modules/@alexarevalo.ai/mcp-server-ticktick/dist/cli.js` instead of `npx -y`, (5) restarts gateway
+- [X] T002 Create `scripts/patch-ticktick-mcp-tags.sh` — script that: (1) installs `@alexarevalo.ai/mcp-server-ticktick` to `/opt/mcp-servers/ticktick-mcp/` via npm, (2) patches `dist/common/types.js` to add `tags: z.array(z.string()).optional()` to `TickTickTaskSchema`, (3) patches `dist/operations/tasks.js` to add `tags: z.array(z.string()).optional().describe('Task tags, e.g. ["DUE/D_2026.12.31"]')` to both `CreateTaskOptionsSchema` and `UpdateTaskOptionsSchema`, (4) updates mcporter config to use `node /opt/mcp-servers/ticktick-mcp/node_modules/@alexarevalo.ai/mcp-server-ticktick/dist/cli.js` instead of `npx -y`, (5) restarts gateway
 
-- [ ] T003 [P] Add tag notation reference section to `agents/schedule/TOOLS.md` — include: (a) tag format reference table (type / parent tag / child format / example / semantics), (b) date format `YYYY.MM.DD`, (c) edge case handling cheat sheet (multiple DUE → nearest; NOT_EARLIER > DUE → warn; invalid date → ignore+notify; space in name → underscore), (d) human-readable display mapping table
+- [X] T003 [P] Add tag notation reference section to `agents/schedule/TOOLS.md` — include: (a) tag format reference table (type / parent tag / child format / example / semantics), (b) date format `YYYY.MM.DD`, (c) edge case handling cheat sheet (multiple DUE → nearest; NOT_EARLIER > DUE → warn; invalid date → ignore+notify; space in name → underscore), (d) human-readable display mapping table
 
-- [ ] T004 [P] Add tag notation instructions to `agents/schedule/AGENTS.md` — add new section "Система тегов-нотации" with: (a) when to add each tag type (DUE: user states deadline; NOT_EARLIER: user states earliest start; PERSON: user mentions a person), (b) tag construction rules (format, name transliteration, underscore for spaces), (c) tag operations rule: always preserve existing tags — read current `tags[]`, append new tag, pass full array to update_task; never overwrite all tags, (d) display rule: never show raw tags to user, always render human-readable
+- [X] T004 [P] Add tag notation instructions to `agents/schedule/AGENTS.md` — add new section "Система тегов-нотации" with: (a) when to add each tag type (DUE: user states deadline; NOT_EARLIER: user states earliest start; PERSON: user mentions a person), (b) tag construction rules (format, name transliteration, underscore for spaces), (c) tag operations rule: always preserve existing tags — read current `tags[]`, append new tag, pass full array to update_task; never overwrite all tags, (d) display rule: never show raw tags to user, always render human-readable
 
-- [ ] T005 Deploy MCP patch: `./scripts/patch-ticktick-mcp-tags.sh hetzner-main`
+- [X] T005 Deploy MCP patch: `./scripts/patch-ticktick-mcp-tags.sh hetzner-main`
 
-- [ ] T006 Verify MCP patch: `ssh hetzner-main "mcporter list ticktick --schema --json"` → confirm `create_task` properties include `tags`, `update_task` includes `tags`, `get_task_by_ids` response schema includes `tags`
+- [X] T006 Verify MCP patch: `ssh hetzner-main "mcporter list ticktick --schema --json"` → confirm `create_task` properties include `tags`, `update_task` includes `tags`, `get_task_by_ids` response schema includes `tags`
 
-- [ ] T007 Deploy updated agent workspace: `./scripts/setup-agents.sh hetzner-main` (to push AGENTS.md + TOOLS.md changes)
+- [X] T007 Deploy updated agent workspace: `./scripts/setup-agents.sh hetzner-main` (to push AGENTS.md + TOOLS.md changes)
 
 **Checkpoint**: MCP reads/writes tags. Agent has tag notation reference. User stories can now be implemented.
 
@@ -67,11 +67,11 @@
 
 **Independent Test**: Create a task with `DUE/D_<+3 days>` and `dueDate` next week → run `/daily-planner` → task appears in 🔥 Горящие дедлайны section (not buried in regular plan sections).
 
-- [ ] T012 [US2] Update `skills/daily-planner/SKILL.md` — insert new **Фаза 0.5** between Фаза 0 and Фаза 1: (a) scan all fetched tasks for `DUE/D_*` tags, parse deadline date; (b) compute days_until = deadline − today; (c) build горящие_дедлайны list: tasks where 0 ≤ days_until ≤ 7; (d) build просроченные_дедлайны list: tasks where days_until < 0; (e) mark tasks with NOT_EARLIER future date with ⚠️ note
+- [X] T012 [US2] Update `skills/daily-planner/SKILL.md` — insert new **Фаза 0.5** between Фаза 0 and Фаза 1: (a) scan all fetched tasks for `DUE/D_*` tags, parse deadline date; (b) compute days_until = deadline − today; (c) build горящие_дедлайны list: tasks where 0 ≤ days_until ≤ 7; (d) build просроченные_дедлайны list: tasks where days_until < 0; (e) mark tasks with NOT_EARLIER future date with ⚠️ note
 
-- [ ] T013 [US2] Update `skills/daily-planner/SKILL.md` — add 🔥 **Горящие дедлайны** output block immediately before Фаза 1 output: show overdue first (with "дедлайн СЕГОДНЯ" / "дедлайн ПРОСРОЧЕН N дн."), then upcoming sorted by deadline ASC; display deadline in human-readable format; include NOT_EARLIER note if suppressed; skip section entirely if горящие_дедлайны is empty
+- [X] T013 [US2] Update `skills/daily-planner/SKILL.md` — add 🔥 **Горящие дедлайны** output block immediately before Фаза 1 output: show overdue first (with "дедлайн СЕГОДНЯ" / "дедлайн ПРОСРОЧЕН N дн."), then upcoming sorted by deadline ASC; display deadline in human-readable format; include NOT_EARLIER note if suppressed; skip section entirely if горящие_дедлайны is empty
 
-- [ ] T014 [US2] Deploy updated daily-planner skill: `./scripts/deploy-skills.sh hetzner-main`
+- [X] T014 [US2] Deploy updated daily-planner skill: `./scripts/deploy-skills.sh hetzner-main`
 
 - [ ] T015 [US2] Verify scenario 1: task with `DUE/D_<+3days>` and `dueDate` next week → runs `/daily-planner` → task in 🔥 section
 
@@ -91,11 +91,11 @@
 
 **Independent Test**: Create task with `NOT_EARLIER/N_<+14 days>` → run `/daily-planner` → task absent from all plan sections. Run `/ticktick-inbox` → task appears under "🧊 Заморожено" with correct date.
 
-- [ ] T019 [US3] Update `skills/daily-planner/SKILL.md` — in Фаза 0.5 (or as additional step): compute suppressed list (tasks where NOT_EARLIER date > today); in Фаза 1 (автоматический блок) and Фаза 2 (рекомендации): exclude suppressed tasks from all sections EXCEPT горящие дедлайны (suppressed горящий tasks shown with ⚠️ freeze note per spec edge case)
+- [X] T019 [US3] Update `skills/daily-planner/SKILL.md` — in Фаза 0.5 (or as additional step): compute suppressed list (tasks where NOT_EARLIER date > today); in Фаза 1 (автоматический блок) and Фаза 2 (рекомендации): exclude suppressed tasks from all sections EXCEPT горящие дедлайны (suppressed горящий tasks shown with ⚠️ freeze note per spec edge case)
 
-- [ ] T020 [US3] Update `skills/ticktick-inbox/SKILL.md` — in Фаза 7 (отчёт): add 🧊 **Заморожено** section listing tasks with NOT_EARLIER date in future, format: "🧊 Заморожено (не раньше [date]): K задач\n- «задача» — заморожена до: [date]"
+- [X] T020 [US3] Update `skills/ticktick-inbox/SKILL.md` — in Фаза 7 (отчёт): add 🧊 **Заморожено** section listing tasks with NOT_EARLIER date in future, format: "🧊 Заморожено (не раньше [date]): K задач\n- «задача» — заморожена до: [date]"
 
-- [ ] T021 [US3] Deploy both updated skills: `./scripts/deploy-skills.sh hetzner-main`
+- [X] T021 [US3] Deploy both updated skills: `./scripts/deploy-skills.sh hetzner-main`
 
 - [ ] T022 [US3] Verify scenario 1: task with `NOT_EARLIER/N_<+16days>` → excluded from `/daily-planner` plan sections
 
@@ -133,13 +133,13 @@ Note: PERSON tag creation logic is already in AGENTS.md (T004). This phase verif
 
 **Independent Test**: Inbox task "сдать до 15 апреля" → agent suggests `DUE/D_2026.04.15` in questions block (not auto-applied). Inbox task "Обсудить с Ксенией" → agent suggests `PERSON/P_KSENIIA`.
 
-- [ ] T029 [US5] Update `skills/ticktick-inbox/SKILL.md` — in Фаза 3 (разбор каждой задачи): add tag detection step: (a) scan title + content for deadline phrases ("до [дата]", "дедлайн", "к [дата]", "сдать") → extract date, suggest `DUE/D_YYYY.MM.DD`; (b) scan for person mentions (proper names, mentions) → suggest `PERSON/P_NAME`; (c) scan for "не раньше", "начать с [дата]", "актуально с" → suggest `NOT_EARLIER/N_YYYY.MM.DD`
+- [X] T029 [US5] Update `skills/ticktick-inbox/SKILL.md` — in Фаза 3 (разбор каждой задачи): add tag detection step: (a) scan title + content for deadline phrases ("до [дата]", "дедлайн", "к [дата]", "сдать") → extract date, suggest `DUE/D_YYYY.MM.DD`; (b) scan for person mentions (proper names, mentions) → suggest `PERSON/P_NAME`; (c) scan for "не раньше", "начать с [дата]", "актуально с" → suggest `NOT_EARLIER/N_YYYY.MM.DD`
 
-- [ ] T030 [US5] Update `skills/ticktick-inbox/SKILL.md` — in Фаза 3 приоритет rule: if task has (or has been suggested) `DUE/*` within 7 days → assign High priority (implements FR-013); include in report: "↑ High — горящий дедлайн [date]"
+- [X] T030 [US5] Update `skills/ticktick-inbox/SKILL.md` — in Фаза 3 приоритет rule: if task has (or has been suggested) `DUE/*` within 7 days → assign High priority (implements FR-013); include in report: "↑ High — горящий дедлайн [date]"
 
-- [ ] T031 [US5] Update `skills/ticktick-inbox/SKILL.md` — in Фаза 4 (вопросы/неоднозначные кейсы): when tag suggestion exists, include it in the question: "Предлагаю добавить тег: `DUE/D_2026.04.15` — добавить? (да/нет)"
+- [X] T031 [US5] Update `skills/ticktick-inbox/SKILL.md` — in Фаза 4 (вопросы/неоднозначные кейсы): when tag suggestion exists, include it in the question: "Предлагаю добавить тег: `DUE/D_2026.04.15` — добавить? (да/нет)"
 
-- [ ] T032 [US5] Deploy updated ticktick-inbox skill: `./scripts/deploy-skills.sh hetzner-main`
+- [X] T032 [US5] Deploy updated ticktick-inbox skill: `./scripts/deploy-skills.sh hetzner-main`
 
 - [ ] T033 [US5] Verify scenario 1: inbox task "сдать до 15 апреля" → agent proposes `DUE/D_2026.04.15` in questions block (NOT auto-applied)
 
