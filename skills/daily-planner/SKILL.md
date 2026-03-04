@@ -1,7 +1,7 @@
 ---
 name: daily-planner
 description: Планирование дня — автодобавление рутин, подбор задач по целям, контроль нагрузки
-user-invocable: true
+user-invocable: trueB
 ---
 
 # Планирование дня
