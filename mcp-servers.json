@@ -66,6 +66,17 @@
       "description": "BestChange exchange aggregator — live crypto/fiat rates across 300+ exchangers",
       "managed_by": "mcporter",
       "mcporter_scope": "home"
+    },
+    "ticktick-focus": {
+      "source": "https://github.com/germanKoch/ticktick-focus-mcp",
+      "install_path": "/opt/mcp-servers/ticktick-focus-mcp",
+      "transport": "stdio",
+      "command": "/opt/mcp-servers/ticktick-focus-mcp/.venv/bin/python",
+      "args": ["-m", "ticktick_focus_mcp"],
+      "env_vars": ["TICKTICK_USERNAME", "TICKTICK_PASSWORD", "TICKTICK_TIMEZONE"],
+      "description": "TickTick Focus sessions (Pomodoro/Stopwatch) — timeline, statistics, CRUD via unofficial API",
+      "managed_by": "mcporter",
+      "mcporter_scope": "home"
     }
   }
 }
