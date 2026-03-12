@@ -63,6 +63,7 @@ if "agents" not in cfg:
 
 # Preserve existing defaults (model, maxConcurrent, subagents, etc.)
 defaults = cfg["agents"].get("defaults", {})
+defaults["model"] = "openai-codex/gpt-5.3-codex"
 
 # Build agents list (merge with existing to avoid clobbering manual entries)
 existing_list = cfg["agents"].get("list", [])
